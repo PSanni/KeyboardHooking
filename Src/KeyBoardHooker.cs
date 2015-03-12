@@ -8,7 +8,7 @@ using System.Windows.Forms;
 namespace KeyBoardHook
 {
     /// <summary>
-    /// A class than manage global low level keyboard hook.
+    /// A class that manage global low level keyboard hook.
     /// </summary>
     class globalKeyboardHook
     {
@@ -80,36 +80,32 @@ namespace KeyBoardHook
         #region Instance variables
 
         //Collection of keys to watch..
-        public List<Keys> HookedKeys = new List<Keys>();
+        private List<Keys> HookedKeys = new List<Keys>();
 
         IntPtr hook = IntPtr.Zero;
 
-        bool isLower = false;
+        bool isAlphabet = false;
+        bool isShiftDown = false;
+
         #endregion
 
         #region Events
 
-        /// <summary>
-        /// Occurs when one of the hoocked key down
-        /// </summary>
-        public event KeyEventHandler KeyDown;
 
+        public delegate void KeyUpEventHandler(HoockerEventArgs e);
         /// <summary>
-        /// Occurs when one of the hooked key up
+        /// Occures while register key down.
         /// </summary>
-        public event KeyEventHandler KeyUp;
+        public event KeyUpEventHandler KeyUp;
+        /// <summary>
+        /// Occures while register key up.
+        /// </summary>
+        /// <param name="e"></param>
+        public delegate void KeyDownEventHandler(HoockerEventArgs e);
+        public event KeyDownEventHandler KeyDown;
 
         #endregion
 
-        #region Properties
-        /// <summary>
-        /// Key presed and lowercase alphabet or not.
-        /// </summary>
-        public bool IsLower{
-
-            get { return isLower; }
-        }
-        #endregion
 
         #region public functions
 
@@ -178,14 +174,16 @@ namespace KeyBoardHook
                 Keys key = (Keys)lParam.vkCode; 
                 if (HookedKeys.Contains(key)) {
                     KeyEventArgs EKey = new KeyEventArgs(key); //Initiating new event.
+                    if (Char.IsLetter(EKey.KeyData.ToString(), 0)) { isAlphabet = true; }
                     if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && (KeyDown != null))
                     {
-                       
-                        KeyDown(this, EKey);
+                        if (EKey.KeyData == Keys.LShiftKey || EKey.KeyData == Keys.RShiftKey) { isShiftDown = true; }
+                        KeyDown(new HoockerEventArgs(EKey, isShiftDown,isAlphabet));
                     }
                     else if ((wParam == WM_KEYUP || wParam == WM_SYSKEYUP) && (KeyUp != null))
                     {
-                        KeyUp(this, EKey);
+                        if (EKey.KeyData == Keys.LShiftKey || EKey.KeyData == Keys.RShiftKey) { isShiftDown = false; }
+                        KeyUp(new HoockerEventArgs(EKey, isShiftDown, isAlphabet));
                     }
                     if (EKey.Handled)
                         return 1;

@@ -83,6 +83,8 @@ namespace KeyBoardHook
         public List<Keys> HookedKeys = new List<Keys>();
 
         IntPtr hook = IntPtr.Zero;
+
+        bool isLower = false;
         #endregion
 
         #region Events
@@ -99,7 +101,53 @@ namespace KeyBoardHook
 
         #endregion
 
+        #region Properties
+        /// <summary>
+        /// Key presed and lowercase alphabet or not.
+        /// </summary>
+        public bool IsLower{
+
+            get { return isLower; }
+        }
+        #endregion
+
         #region public functions
+
+        /// <summary>
+        /// Add key to capturing list.
+        /// </summary>
+        /// <param name="key">Keys object to register</param>
+        public void RegisterKey(Keys key) {
+            if (!HookedKeys.Contains(key)) {
+                HookedKeys.Add(key);          
+            }
+        }
+
+        /// <summary>
+        /// Remove key from capturing list.
+        /// </summary>
+        /// <param name="key">Keys object to unregister</param>
+        public void UnRegisterKey(Keys key) {
+            if (HookedKeys.Contains(key)) {
+                HookedKeys.Remove(key);          
+            }
+        }
+
+        /// <summary>
+        /// Registerting all keys from keyboard.
+        /// </summary>
+        public void AutoRegister() {
+            HookedKeys.Clear();
+            HookedKeys.AddRange(Enum.GetValues(typeof(Keys)).Cast<Keys>().ToList());
+        }
+
+        /// <summary>
+        /// Unregistering keys.
+        /// </summary>
+        public void AutoUnregister() {
+            HookedKeys.Clear();
+            HookedKeys = new List<Keys>();
+        }
 
         /// <summary>
         /// Initiate the public hook
@@ -132,6 +180,7 @@ namespace KeyBoardHook
                     KeyEventArgs EKey = new KeyEventArgs(key); //Initiating new event.
                     if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && (KeyDown != null))
                     {
+                       
                         KeyDown(this, EKey);
                     }
                     else if ((wParam == WM_KEYUP || wParam == WM_SYSKEYUP) && (KeyUp != null))
